@@ -6,16 +6,14 @@ public class PlayerMovement : MonoBehaviour
 {
     public int playerSpeed = 1;
     public int jumpForce = 4;
-    public LayerMask whatIsGround;
-    public Transform groundCheck;
-    public float checkRadius;
-
+    public int playerRunSpeed = 2;
+    public bool isGrounded;
+    public bool isAttacking;
 
     private bool facingRight = false; //player is facing left to begin with
     private float moveInput;
+
     private Rigidbody2D rbody;
-    private bool isGrounded;
-    private bool isAttacking;
     private PlayerAnim anim;
 
     // Start is called before the first frame update
@@ -23,16 +21,34 @@ public class PlayerMovement : MonoBehaviour
     {
         rbody = GetComponent<Rigidbody2D>();
         anim = GetComponent<PlayerAnim>();
+        isGrounded = true;
 
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
+
+
         //player movement
         moveInput = Input.GetAxis("Horizontal");
-        rbody.velocity = new Vector2(moveInput * playerSpeed, rbody.velocity.y);
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, whatIsGround);
+
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+
+            rbody.velocity = new Vector2(moveInput * playerRunSpeed, rbody.velocity.y);
+            anim.UpdateAnimator("IsRunning", true);
+        }
+        else
+        {
+            rbody.velocity = new Vector2(moveInput * playerSpeed, rbody.velocity.y);
+            anim.UpdateAnimator("IsRunning", false);
+        }
+
+
+
+
+
 
 
         if (facingRight == false && moveInput > 0)
@@ -49,21 +65,22 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        if(isGrounded == true)
-        {
-            anim.UpdateAnimator("IsJumping", false);
-        }
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded == true) //player has to be on ground if jumping
+
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
+            isGrounded = false;
             rbody.velocity = Vector2.up * jumpForce; // shorthand for creating an vector2 where x is 0 and y is 1, multiply by jumpForce
             anim.UpdateAnimator("IsJumping", true);
+
         }
 
-        if (Input.GetKeyDown(KeyCode.X) && isAttacking ==false)
+        if (Input.GetKeyDown(KeyCode.X) && isAttacking == false)
         {
             isAttacking = true;
             anim.UpdateAnimator("IsAttacking", true);
+            rbody.constraints = RigidbodyConstraints2D.FreezePositionX;
+
         }
 
         if (rbody.velocity.x == 0)
@@ -80,15 +97,18 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             anim.UpdateAnimator("IsCrouching", true);
+            rbody.constraints = RigidbodyConstraints2D.FreezePositionX;
         }
         if (Input.GetKeyUp(KeyCode.DownArrow))
         {
             anim.UpdateAnimator("IsCrouching", false);
+            rbody.constraints &= ~RigidbodyConstraints2D.FreezePositionX;
         }
 
 
 
     }
+
 
     private void Flip()
     {
