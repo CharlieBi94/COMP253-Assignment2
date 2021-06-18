@@ -46,7 +46,10 @@ public class PlayerMovement : MonoBehaviour
         }
 
 
-
+        if(Input.GetKeyUp(KeyCode.LeftArrow) || Input.GetKeyUp(KeyCode.RightArrow))
+        {
+            anim.UpdateAnimator("IsIdle", true);
+        }
 
 
 
